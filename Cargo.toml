@@ -1,0 +1,23 @@
+[package]
+name = "gluon"
+version = "0.1.0"
+authors = ["Brett <brett@bmandesigns.com>"]
+edition = "2018"
+
+[dependencies]
+armake2 = { git = "https://github.com/synixebrett/armake2", branch = "master" }
+data-encoding = "*"
+colored = "1.7"
+docopt = "1"
+num_cpus = "1.10"
+rayon = "1.0"
+ring = "*"
+serde = { version = "1.0", features = ["derive"] }
+serde_cbor = "0.9"
+toml = "0.4"
+walkdir = "2.2"
+
+serde_json = "1.0"
+
+[target.'cfg(windows)'.dependencies]
+ansi_term = "0.11"
