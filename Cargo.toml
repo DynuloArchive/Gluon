@@ -9,6 +9,7 @@ armake2 = { git = "https://github.com/synixebrett/armake2", branch = "master" }
 colored = "1.7"
 data-encoding = "*"
 docopt = "1"
+linked-hash-map = "*"
 num_cpus = "1.10"
 rayon = "1.0"
 reqwest = "*"
