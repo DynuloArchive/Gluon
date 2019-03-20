@@ -11,19 +11,18 @@ use std::sync::{Arc, Mutex};
 use crate::error::*;
 use crate::files::*;
 
-pub fn process(dir: &String) -> Result<(), Error> {
-    let c = config::open(&PathBuf::from(format!("{}/config.toml", dir)))?;
+pub fn process() -> Result<(), Error> {
+    let c = config::open(&PathBuf::from("./config.toml"))?;
     println!("{:?}", c.mods);
     let mut repo = Repo::new();
     let arepo = Arc::new(Mutex::new(&mut repo));
     c.mods.par_iter().for_each(|entry| {
         let mut layer = Layer::new(entry.1.path.clone());
         let alayer = Arc::new(Mutex::new(&mut layer));
-        let name = format!("{}/{}", dir, entry.1.path);
-        process_dir(&name, &alayer).unwrap_or_print();
+        process_dir(&entry.1.path, &alayer).unwrap_or_print();
         arepo.lock().unwrap().l.push(layer);
     });
-    repo.save(dir)?;
+    repo.save()?;
     Ok(())
 }
 

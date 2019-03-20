@@ -7,6 +7,7 @@ use ansi_term;
 
 use std::io::{Error};
 
+mod download;
 mod error;
 mod files;
 mod functions;
@@ -18,24 +19,29 @@ const USAGE: &'static str = "
 Gluon, an easy to use PBO management tool
 
 Usage:
-    gluon run <directory> [--jobs=<n>]
+    gluon run [--jobs=<n>]
     gluon fetch <config>
+    gluon add <package>
 ";
 
 #[derive(Debug, Deserialize)]
 struct Args {
     cmd_run: bool,
     cmd_fetch: bool,
+    cmd_add: bool,
     arg_config: String,
-    arg_directory: String,
+    arg_package: String,
     flag_jobs: usize,
 }
 
 fn run(args: &Args) -> Result<(), Error> {
     if args.cmd_run {
-        crate::functions::run::process(&args.arg_directory)?;
+        crate::functions::run::process()?;
     } else if args.cmd_fetch {
         crate::functions::fetch::process(&args.arg_config)?;
+    } else if args.cmd_add {
+        let installed = crate::functions::repo::add(&args.arg_package, 0)?;
+        println!("Installed {} Packages", installed);
     }
     Ok(())
 }

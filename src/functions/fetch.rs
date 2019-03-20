@@ -31,11 +31,11 @@ pub fn process_layer(root: &String, lpath: &String, layer: &Layer) -> Result<(),
             let epath = e?.path();
             let name = epath.file_name().unwrap().to_str().unwrap().to_owned();
             if epath.is_dir() {
-                if layer.l.iter().filter(|&x| *x.n == name).collect::<Vec<_>>().len() == 0 {
+                if !layer.l.iter().any(|x| x.n == name) {
                     fs::remove_dir_all(format!("mods/{}/{}", &path, name))?;
                 }
             } else {
-                if layer.f.iter().filter(|&x| *x.n == name).collect::<Vec<_>>().len() == 0 {
+                if !layer.f.iter().any(|x| x.n == name) {
                     fs::remove_file(format!("mods/{}/{}", &path, name))?;
                 }
             }
@@ -85,7 +85,7 @@ pub fn process_layer(root: &String, lpath: &String, layer: &Layer) -> Result<(),
                     let mut files: LinkedHashMap<String, Cursor<Box<[u8]>>> = LinkedHashMap::new();
                     for header in &headers {
                         let newfile = file.p.iter().filter(|&x| x.n == header.filename).collect::<Vec<_>>()[0];
-                        if pbofile.headers.iter().filter(|&x| *x.filename == header.filename).collect::<Vec<_>>().len() == 0 {
+                        if !pbofile.headers.iter().any(|x| x.filename == header.filename) {
                             println!("new file: {}", header.filename);
                             let client = reqwest::Client::new();
                             let mut response = client.get(&url)
@@ -128,9 +128,8 @@ pub fn process_layer(root: &String, lpath: &String, layer: &Layer) -> Result<(),
         }
         if download {
             println!("file: {}", &url);
-            let mut response = reqwest::get(&url).unwrap_or_print();
             let mut out = File::create(pbuf)?;
-            std::io::copy(&mut response, &mut out)?;
+            crate::download::download(&url, &mut out, None)?;
         }
     }
     Ok(())

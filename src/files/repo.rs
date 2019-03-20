@@ -16,10 +16,10 @@ impl Repo {
             l: Vec::new()
         }
     }
-    pub fn save(&self, dir: &String) -> Result<(), Error> {
-        let mut out = File::create(format!("{}/repo.cbor", dir))?;
+    pub fn save(&self) -> Result<(), Error> {
+        let mut out = File::create("repo.cbor")?;
         serde_cbor::to_writer(&mut out, &self).unwrap_or_print();
-        let mut out = File::create(format!("{}/repo.json", dir))?;
+        let mut out = File::create("repo.json")?;
         out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?;
         Ok(())
     }
