@@ -1,15 +1,15 @@
-use rayon::prelude::*;
 use armake2::pbo;
+use rayon::prelude::*;
 
+use std::ffi::OsStr;
+use std::fs;
+use std::fs::File;
 use std::io::Error;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use std::fs;
-use std::fs::File;
-use std::ffi::OsStr;
 
-use crate::files::*;
 use crate::error::*;
+use crate::files::*;
 
 pub fn process(dir: &String) -> Result<(), Error> {
     let c = config::open(&PathBuf::from(format!("{}/config.toml", dir)))?;

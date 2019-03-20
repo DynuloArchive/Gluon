@@ -2,10 +2,10 @@ use serde::{Serialize, Deserialize};
 use toml;
 
 use std::collections::{HashMap};
+use std::fs::File;
 use std::io::{Error};
 use std::io::Read;
 use std::path::PathBuf;
-use std::fs::File;
 
 use crate::error::*;
 

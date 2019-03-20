@@ -1,11 +1,8 @@
 use serde::{Serialize, Deserialize};
-
 use serde_json;
 
 use std::fs::File;
-use std::io::Error;
-
-use std::io::Write;
+use std::io::{Error, Read, Write};
 
 use crate::error::*;
 
@@ -23,8 +20,12 @@ impl Repo {
         let mut out = File::create(format!("{}/repo.cbor", dir))?;
         serde_cbor::to_writer(&mut out, &self).unwrap_or_print();
         let mut out = File::create(format!("{}/repo.json", dir))?;
-        out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?));
+        out.write_fmt(format_args!("{}", serde_json::to_string_pretty(&self)?))?;
         Ok(())
+    }
+    pub fn open<I: Read>(reader: &mut I) -> Result<Self, Error> {
+        let repo: Repo = serde_cbor::from_reader(reader).unwrap_or_print();;
+        Ok(repo)
     }
 }
 
@@ -32,8 +33,10 @@ impl Repo {
 pub struct Layer {
     pub n: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
     pub f: Vec<ModFile>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
     pub l: Vec<Layer>,
 }
 impl Layer {
@@ -51,6 +54,7 @@ pub struct ModFile {
     pub n: String,
     pub h: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new")]
     pub p: Vec<ModPart>,
 }
 impl ModFile {

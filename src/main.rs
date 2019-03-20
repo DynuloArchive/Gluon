@@ -1,6 +1,6 @@
 use docopt::Docopt;
-use serde::Deserialize;
 use num_cpus;
+use serde::Deserialize;
 
 #[cfg(windows)]
 use ansi_term;
@@ -18,19 +18,24 @@ const USAGE: &'static str = "
 Gluon, an easy to use PBO management tool
 
 Usage:
-    gluon run <config> [--jobs=<n>]
+    gluon run <directory> [--jobs=<n>]
+    gluon fetch <config>
 ";
 
 #[derive(Debug, Deserialize)]
 struct Args {
     cmd_run: bool,
+    cmd_fetch: bool,
     arg_config: String,
+    arg_directory: String,
     flag_jobs: usize,
 }
 
 fn run(args: &Args) -> Result<(), Error> {
     if args.cmd_run {
-        crate::functions::run::process(&args.arg_config)?;
+        crate::functions::run::process(&args.arg_directory)?;
+    } else if args.cmd_fetch {
+        crate::functions::fetch::process(&args.arg_config)?;
     }
     Ok(())
 }

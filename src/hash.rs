@@ -1,9 +1,10 @@
 use data_encoding::BASE64_NOPAD;
 use ring::digest::{Context, Digest, SHA256};
+
 use std::fs::File;
-use std::path::PathBuf;
-use std::io::Cursor;
 use std::io::{BufReader, Read, Error};
+use std::io::Cursor;
+use std::path::PathBuf;
 
 pub fn hash_digest<R: Read>(mut reader: R) -> Result<Digest, Error> {
     let mut context = Context::new(&SHA256);
