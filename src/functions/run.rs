@@ -14,7 +14,7 @@ use crate::files::*;
 pub fn process() -> Result<(), Error> {
     let c = config::open(&PathBuf::from("./config.toml"))?;
     println!("{:?}", c.mods);
-    let mut repo = Repo::new();
+    let mut repo = Repo::new(c.name.clone());
     let arepo = Arc::new(Mutex::new(&mut repo));
     c.mods.par_iter().for_each(|entry| {
         let mut layer = Layer::new(entry.1.path.clone());
@@ -23,6 +23,7 @@ pub fn process() -> Result<(), Error> {
         arepo.lock().unwrap().l.push(layer);
     });
     repo.save()?;
+    c.save()?;
     Ok(())
 }
 

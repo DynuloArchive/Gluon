@@ -8,12 +8,16 @@ use crate::error::*;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Repo {
-    pub l: Vec<Layer>
+    pub l: Vec<Layer>,
+    pub n: String,
+    pub v: u16,
 }
 impl Repo {
-    pub fn new() -> Self {
+    pub fn new(name: String) -> Self {
         Repo {
-            l: Vec::new()
+            l: Vec::new(),
+            n: name,
+            v: 1,
         }
     }
     pub fn save(&self) -> Result<(), Error> {
