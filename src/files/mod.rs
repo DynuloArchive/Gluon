@@ -9,11 +9,13 @@ pub use crate::files::repo::*;
 use std::io::{Error, Read, Seek};
 use std::fs;
 
+use crate::error::*;
+
 pub fn extract<R: Seek + Read>(input: R) -> Result<Vec<String>, Error> {
     let mut archive = zip::ZipArchive::new(input)?;
     let mut roots: Vec<String> = Vec::new();
     for i in 0..archive.len() {
-        let mut file = archive.by_index(i).unwrap();
+        let mut file = archive.by_index(i).unwrap_or_print();
         let outpath = file.sanitized_name();
         if (&*file.name()).ends_with('/') {
             fs::create_dir_all(&outpath)?;

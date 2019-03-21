@@ -3,7 +3,7 @@ use toml;
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Error, Read};
+use std::io::{Error, Read, Write};
 use std::path::Path;
 
 use crate::error::*;
@@ -26,13 +26,20 @@ impl Packages {
         };
         Ok(p)
     }
+    pub fn save(&self) -> Result<(), Error> {
+        let mut f = File::create("packages.toml")?;
+        f.write_fmt(format_args!("{}", &toml::to_string_pretty(&self).unwrap_or_print()))?;
+        Ok(())
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LocalPackage {
     pub version: String,
     pub github: String,
     pub folders: Vec<String>,
+    #[serde(default = "String::new")]
+    pub etag: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

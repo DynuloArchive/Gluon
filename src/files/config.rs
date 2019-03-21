@@ -19,7 +19,7 @@ pub fn open(path: &PathBuf) -> Result<Config, Error> {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub mods: HashMap<String, Mod>
+    pub mods: HashMap<String, Mod>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

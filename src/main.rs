@@ -14,6 +14,7 @@ mod functions;
 mod hash;
 
 use crate::error::*;
+use crate::files::packages::*;
 
 const USAGE: &'static str = "
 Gluon, an easy to use PBO management tool
@@ -40,7 +41,9 @@ fn run(args: &Args) -> Result<(), Error> {
     } else if args.cmd_fetch {
         crate::functions::fetch::process(&args.arg_config)?;
     } else if args.cmd_add {
-        let installed = crate::functions::repo::add(&args.arg_package, 0)?;
+        let mut p: Packages = Packages::open()?;
+        let installed = crate::functions::repo::add(&mut p, &args.arg_package, 0)?;
+        p.save()?;
         println!("Installed {} Packages", installed);
     }
     Ok(())
