@@ -21,7 +21,7 @@ pub fn open(path: &PathBuf) -> Result<Config, Error> {
 pub struct Config {
     pub name: String,
     pub mods: HashMap<String, Mod>,
-    pub serers: HashMap<String, Server>,
+    pub servers: HashMap<String, Server>,
 }
 impl Config {
     pub fn save(&self) -> Result<(), Error> {
@@ -43,7 +43,7 @@ pub struct Mod {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Server {
     pub address: String,
-    pub server: String,
+    pub password: String,
     pub name: String,
     #[serde(default = "dft_false")]
     #[serde(skip_serializing_if = "is_false")]
