@@ -38,7 +38,7 @@ pub fn add(p: &mut Packages, package: &String, total: u32) -> Result<u32, Error>
         println!("{}", remote.name);
         let buf: Vec<u8> = Vec::new();
         let mut cursor = Cursor::new(buf);
-        crate::download::download(&releases[0].assets[0].url, &mut cursor, Some(releases[0].assets[0].size)).unwrap_or_print();
+        crate::download::download(&releases[0].assets[0].url, &mut cursor, Some(releases[0].assets[0].size), None).unwrap_or_print();
         let folders = crate::files::extract(cursor)?;
         if p.packages.contains_key(package) {
             p.packages.remove(package);

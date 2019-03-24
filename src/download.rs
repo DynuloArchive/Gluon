@@ -21,7 +21,7 @@ impl<R: Read> Read for DownloadProgress<R> {
     }
 }
 
-pub fn download<O: Write>(url: &str, mut output: &mut O, size: Option<u64>) -> Result<(), Error> {
+pub fn download<O: Write>(url: &str, mut output: &mut O, size: Option<u64>, opb: Option<ProgressBar>) -> Result<ProgressBar, Error> {
     let url = Url::parse(url).unwrap_or_print();
     let client = Client::new();
 
@@ -42,7 +42,13 @@ pub fn download<O: Write>(url: &str, mut output: &mut O, size: Option<u64>) -> R
     };
 
     let request = client.get(url.as_str()).header(USER_AGENT, "Dynulo/Gluon").header(ACCEPT, "application/octet-stream");
-    let pb = ProgressBar::new(total_size);
+    let pb = match opb {
+        Some(v) => {
+            v.set_length(total_size);
+            v
+        },
+        None => ProgressBar::new(total_size)
+    };
     pb.set_style(ProgressStyle::default_bar()
         .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
         .progress_chars("#>-"));
@@ -55,5 +61,5 @@ pub fn download<O: Write>(url: &str, mut output: &mut O, size: Option<u64>) -> R
     //output.write_all(&mut source.inner);
     let _ = copy(&mut source, &mut output)?;
 
-    Ok(())
+    Ok(source.progress_bar)
 }

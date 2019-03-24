@@ -1,16 +1,17 @@
 use armake2::io::*;
 use armake2::pbo::{PBO, PBOHeader};
 use linked_hash_map::{LinkedHashMap};
-use rayon::prelude::*;
 use reqwest;
 use reqwest::header::{HeaderValue, RANGE};
+use indicatif::{MultiProgress, ProgressBar};
 
-use std::collections::HashMap;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use std::sync::{Arc, Mutex};
 use std::fs;
 use std::fs::File;
 use std::io::{Cursor, Error, Read};
 use std::path::PathBuf;
+use std::thread;
 
 use crate::error::*;
 use crate::files::*;
@@ -25,33 +26,49 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
         println!("Mod: {}", moddir.n);
         process_layer(&dir, &config, &String::from("."), moddir, &mut queue).unwrap_or_print();
     }
-    queue.par_iter().for_each(|entry| {
-        let (file, pbuf, path) = entry;
-        println!("Downloading {:?} to {}", pbuf, format!("{}/{}", dir.display(), &path));
-        crate::server::send(format!("B {:?}", pbuf));
-        fs::create_dir_all(format!("{}/{}", dir.display(), &path)).unwrap_or_print();
-        let mut urlpath = path.clone();
-        urlpath.remove(0);
-        urlpath.remove(0);
-        let url = format!("{}/{}/{}", &config, &urlpath, &file.n);
-        if pbuf.exists() {
-            if let Some(a) = pbuf.extension() {
-                if a == "pbo" {
-                    pbo(pbuf, file, url).unwrap_or_print();
+    let aqueue = Arc::new(Mutex::new(queue));
+    let mut workers = Vec::new();
+    let m = MultiProgress::new();
+    for _ in 0..4 {
+        let config = config.clone();
+        let caqueue = aqueue.clone();
+        let mut pb = m.add(ProgressBar::new(128));
+        workers.push(thread::spawn(move || {
+            let mut go = true;
+            while go {
+            let mut que = caqueue.lock().unwrap();
+            if let Some((file, pbuf, path)) = que.pop_front() {
+                drop(que);
+                crate::server::send(format!("B {:?}", pbuf));
+                let mut urlpath = path.clone();
+                urlpath.remove(0);
+                urlpath.remove(0);
+                let url = format!("{}/{}/{}", &config, &urlpath, &file.n);
+                pb.set_message(&file.n);
+                if pbuf.exists() {
+                    if let Some(a) = pbuf.extension() {
+                        if a == "pbo" {
+                            pbo(&pbuf, &file, url).unwrap_or_print();
+                        } else {
+                            let mut out = File::create(&pbuf).unwrap_or_print();
+                            pb = crate::download::download(&url, &mut out, None, Some(pb)).unwrap_or_print();
+                        }
+                    } else {
+                        let mut out = File::create(&pbuf).unwrap_or_print();
+                        pb = crate::download::download(&url, &mut out, None, Some(pb)).unwrap_or_print();
+                    }
                 } else {
-                    let mut out = File::create(pbuf).unwrap_or_print();
-                    crate::download::download(&url, &mut out, None).unwrap_or_print();
+                    let mut out = File::create(&pbuf).unwrap_or_print();
+                    pb = crate::download::download(&url, &mut out, None, Some(pb)).unwrap_or_print();
                 }
-            } else {
-                let mut out = File::create(pbuf).unwrap_or_print();
-                crate::download::download(&url, &mut out, None).unwrap_or_print();
-            }
-        } else {
-            let mut out = File::create(pbuf).unwrap_or_print();
-            crate::download::download(&url, &mut out, None).unwrap_or_print();
-        }
-        crate::server::send(format!("E {:?}", pbuf));
-    });
+                crate::server::send(format!("E {:?}", &pbuf));
+            } else {go = false}}
+        }));
+    };
+    m.join_and_clear().unwrap();
+    for worker in workers {
+        worker.join().unwrap();
+    }
     crate::server::send(format!("Done"));
     Ok(())
 }
@@ -82,9 +99,11 @@ pub fn process_layer(dir: &PathBuf, root: &String, lpath: &String, layer: &Layer
         let pbuf = PathBuf::from(&format!("{}/{}/{}", dir.display(), &path, &file.n));
         if pbuf.exists() {
             if crate::hash::hash_file(&pbuf)? != file.h {
+                fs::create_dir_all(format!("{}/{}", dir.display(), &path)).unwrap_or_print();
                 queue.push_back((file, pbuf, path.clone()));
             }
         } else {
+            fs::create_dir_all(format!("{}/{}", dir.display(), &path)).unwrap_or_print();
             queue.push_back((file, pbuf, path.clone()));
         }
     }
