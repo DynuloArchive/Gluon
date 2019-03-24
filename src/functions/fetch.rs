@@ -1,16 +1,17 @@
 use armake2::io::*;
 use armake2::pbo::{PBO, PBOHeader};
+use indicatif::{MultiProgress, ProgressBar};
 use linked_hash_map::{LinkedHashMap};
 use reqwest;
 use reqwest::header::{HeaderValue, RANGE};
-use indicatif::{MultiProgress, ProgressBar};
 
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex};
+use std::ffi::OsStr;
 use std::fs;
 use std::fs::File;
 use std::io::{Cursor, Error, Read};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 use crate::error::*;
@@ -46,13 +47,8 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
                 let url = format!("{}/{}/{}", &config, &urlpath, &file.n);
                 pb.set_message(&file.n);
                 if pbuf.exists() {
-                    if let Some(a) = pbuf.extension() {
-                        if a == "pbo" {
-                            pbo(&pbuf, &file, url).unwrap_or_print();
-                        } else {
-                            let mut out = File::create(&pbuf).unwrap_or_print();
-                            pb = crate::download::download(&url, &mut out, None, Some(pb)).unwrap_or_print();
-                        }
+                    if pbuf.extension().unwrap_or(OsStr::new("")) == "pbo" {
+                        pbo(&pbuf, &file, url).unwrap_or_print();
                     } else {
                         let mut out = File::create(&pbuf).unwrap_or_print();
                         pb = crate::download::download(&url, &mut out, None, Some(pb)).unwrap_or_print();
