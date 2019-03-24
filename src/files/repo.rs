@@ -33,7 +33,7 @@ impl Repo {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Layer {
     pub n: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -53,7 +53,7 @@ impl Layer {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ModFile {
     pub n: String,
     pub h: String,
@@ -71,7 +71,7 @@ impl ModFile {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ModPart {
     pub n: String,
     pub h: String,

@@ -1,35 +1,39 @@
-use ws::{listen, CloseCode, Handler, Message, Result, Sender, Handshake};
+use ws::{connect, listen, CloseCode, Handler, Message, Result, Sender, Handshake};
 
-use std::thread;
 use std::path::PathBuf;
+use std::thread;
 
-enum Stage {
+use crate::error::*;
+
+#[derive(Clone)]
+pub enum Stage {
     ROOT,
     DIR,
     FETCH,
 }
 
-pub fn run() {
-    struct Server {
-        out: Sender,
-        stage: Stage,
-        dir: Option<PathBuf>,
-    }
-    impl Handler for Server {
+#[derive(Clone)]
+pub struct Server {
+    pub out: Sender,
+    pub stage: Stage,
+    pub dir: Option<PathBuf>,
+}
+impl Handler for Server {
         fn on_open(&mut self, _: Handshake) -> Result<()> {
             self.out.send("1")
         }
         fn on_message(&mut self, msg: Message) -> Result<()> {
-            println!("Server Got: {}", msg);
             let text = msg.into_text().unwrap();
             match &self.stage {
                 Stage::ROOT => {
                     match text.as_str() {
                         "dir" => {
                             self.stage = Stage::DIR;
-                            self.out.send("fetch").unwrap();
+                            self.out.send("send dir").unwrap();
                         }
-                        _ => {}
+                        _ => {
+                            self.out.broadcast(text).unwrap();
+                        }
                     }
                 },
                 Stage::DIR => {
@@ -51,7 +55,7 @@ pub fn run() {
                                 let url = text.clone();
                                 let dir = self.dir.clone().unwrap();
                                 thread::spawn(move || {
-                                    crate::functions::fetch::process(dir.to_path_buf(), &url);
+                                    crate::functions::fetch::process(dir.to_path_buf(), url).unwrap_or_print();
                                 });
                             }
                         }
@@ -60,10 +64,19 @@ pub fn run() {
             }
             Ok(())
         }
-        fn on_close(&mut self, _: CloseCode, _: &str) {
-            println!("Lost Connection");
-        }
     }
 
+pub fn run() {
     listen("127.0.0.1:51462", |out| Server {out, stage: Stage::ROOT, dir: None}).unwrap();
+}
+
+pub fn send(text: String) {
+    thread::spawn(move || {
+        connect("ws://127.0.0.1:51462", |out| {
+            out.send(text.clone()).unwrap();
+            move |_| {
+                out.close(CloseCode::Normal)
+            }
+        })
+    });
 }

@@ -44,7 +44,7 @@ fn run(args: &Args) -> Result<(), Error> {
     if args.cmd_run {
         crate::functions::run::process()?;
     } else if args.cmd_fetch {
-        crate::functions::fetch::process(PathBuf::from(&args.arg_dir), &args.arg_config)?;
+        crate::functions::fetch::process(PathBuf::from(&args.arg_dir), args.arg_config.clone())?;
     } else if args.cmd_add {
         let mut p: Packages = Packages::open()?;
         let installed = crate::functions::repo::add(&mut p, &args.arg_package, 0)?;
@@ -66,7 +66,8 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_jobs == 0 {
-        args.flag_jobs = num_cpus::get();
+        //args.flag_jobs = num_cpus::get();
+        args.flag_jobs = 4;
     }
     rayon::ThreadPoolBuilder::new().num_threads(args.flag_jobs).build_global().unwrap();
 
