@@ -23,5 +23,7 @@ toml = "0.4"
 walkdir = "2.2"
 zip = "0.5"
 
+ws = "*"
+
 [target.'cfg(windows)'.dependencies]
 ansi_term = "0.11"

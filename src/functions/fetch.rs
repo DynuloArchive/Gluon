@@ -13,41 +13,41 @@ use std::path::PathBuf;
 use crate::error::*;
 use crate::files::*;
 
-pub fn process(config: &String) -> Result<(), Error> {
+pub fn process(dir: PathBuf, config: &String) -> Result<(), Error> {
     let mut body = reqwest::get(&format!("{}/repo.cbor", &config)).unwrap_or_print();
     let repo = crate::files::Repo::open(&mut body)?;
     for moddir in &repo.l {
         println!("Mod: {}", moddir.n);
-        process_layer(&config, &String::from("."), moddir)?;
+        process_layer(&dir, &config, &String::from("."), moddir)?;
     }
     Ok(())
 }
 
-pub fn process_layer(root: &String, lpath: &String, layer: &Layer) -> Result<(), Error> {
+pub fn process_layer(dir: &PathBuf, root: &String, lpath: &String, layer: &Layer) -> Result<(), Error> {
     let path = format!("{}/{}", &lpath, &layer.n);
     println!("layer: {}", path);
-    if PathBuf::from(format!("mods/{}", &path)).exists() {
-        for e in fs::read_dir(format!("mods/{}", &path))? {
+    if PathBuf::from(format!("{}/{}", dir.display(), &path)).exists() {
+        for e in fs::read_dir(format!("{}/{}", dir.display(), &path))? {
             let epath = e?.path();
             let name = epath.file_name().unwrap().to_str().unwrap().to_owned();
             if epath.is_dir() {
                 if !layer.l.iter().any(|x| x.n == name) {
-                    fs::remove_dir_all(format!("mods/{}/{}", &path, name))?;
+                    fs::remove_dir_all(format!("{}/{}/{}", dir.display(), &path, name))?;
                 }
             } else {
                 if !layer.f.iter().any(|x| x.n == name) {
-                    fs::remove_file(format!("mods/{}/{}", &path, name))?;
+                    fs::remove_file(format!("{}/{}/{}", dir.display(), &path, name))?;
                 }
             }
         }
     }
 
-    fs::create_dir_all(format!("mods/{}", &path))?;
+    fs::create_dir_all(format!("{}/{}", dir.display(), &path))?;
     for slayer in &layer.l {
-        process_layer(&root, &path, slayer)?;
+        process_layer(&dir, &root, &path, slayer)?;
     }
     for file in &layer.f {
-        let pbuf = PathBuf::from(&format!("mods/{}/{}", &path, &file.n));
+        let pbuf = PathBuf::from(&format!("{}/{}/{}", dir.display(), &path, &file.n));
         let mut download = false;
         let mut urlpath = path.clone();
         urlpath.remove(0);

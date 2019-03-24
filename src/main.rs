@@ -6,12 +6,14 @@ use serde::Deserialize;
 use ansi_term;
 
 use std::io::{Error};
+use std::path::PathBuf;
 
 mod download;
 mod error;
 mod files;
 mod functions;
 mod hash;
+mod server;
 
 use crate::error::*;
 use crate::files::packages::*;
@@ -21,8 +23,9 @@ Gluon, an easy to use PBO management tool
 
 Usage:
     gluon run [--jobs=<n>]
-    gluon fetch <config>
+    gluon fetch <dir> <config>
     gluon add <package>
+    gluon server
 ";
 
 #[derive(Debug, Deserialize)]
@@ -30,6 +33,8 @@ struct Args {
     cmd_run: bool,
     cmd_fetch: bool,
     cmd_add: bool,
+    cmd_server: bool,
+    arg_dir: String,
     arg_config: String,
     arg_package: String,
     flag_jobs: usize,
@@ -39,12 +44,14 @@ fn run(args: &Args) -> Result<(), Error> {
     if args.cmd_run {
         crate::functions::run::process()?;
     } else if args.cmd_fetch {
-        crate::functions::fetch::process(&args.arg_config)?;
+        crate::functions::fetch::process(PathBuf::from(&args.arg_dir), &args.arg_config)?;
     } else if args.cmd_add {
         let mut p: Packages = Packages::open()?;
         let installed = crate::functions::repo::add(&mut p, &args.arg_package, 0)?;
         p.save()?;
         println!("Installed {} Packages", installed);
+    } else if args.cmd_server {
+        crate::server::run();
     }
     Ok(())
 }
