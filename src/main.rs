@@ -66,8 +66,7 @@ fn main() {
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_jobs == 0 {
-        //args.flag_jobs = num_cpus::get();
-        args.flag_jobs = 4;
+        args.flag_jobs = std::cmp::min(4, num_cpus::get());
     }
     rayon::ThreadPoolBuilder::new().num_threads(args.flag_jobs).build_global().unwrap();
 

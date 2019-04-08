@@ -59,7 +59,7 @@ pub fn download<O: Write>(url: &str, mut output: &mut O, size: Option<u64>, opb:
     };
 
     //output.write_all(&mut source.inner);
-    let _ = copy(&mut source, &mut output)?;
+    copy(&mut source, &mut output)?;
 
     Ok(source.progress_bar)
 }

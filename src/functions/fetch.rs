@@ -27,6 +27,8 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
         println!("Mod: {}", moddir.n);
         process_layer(&dir, &config, &String::from("."), moddir, &mut queue).unwrap_or_print();
     }
+    println!("Queue: {}", queue.len());
+    crate::server::send(format!("Q {}", queue.len()));
     let aqueue = Arc::new(Mutex::new(queue));
     let mut workers = Vec::new();
     let m = MultiProgress::new();

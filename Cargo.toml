@@ -5,7 +5,7 @@ authors = ["Brett <brett@bmandesigns.com>"]
 edition = "2018"
 
 [dependencies]
-armake2 = { git = "https://github.com/synixebrett/armake2", branch = "master" }
+armake2 = { git = "https://github.com/dynulo/armake2", branch = "master" }
 colored = "1.7"
 data-encoding = "*"
 docopt = "1"
