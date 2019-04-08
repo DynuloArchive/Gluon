@@ -51,6 +51,7 @@ fn run(args: &Args) -> Result<(), Error> {
         p.save()?;
         println!("Installed {} Packages", installed);
     } else if args.cmd_server {
+        println!("Starting Gluon Server");
         crate::server::run();
     }
     Ok(())

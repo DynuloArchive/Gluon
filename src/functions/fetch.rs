@@ -19,7 +19,7 @@ use crate::files::*;
 
 type QueueVec = VecDeque<(ModFile, PathBuf, String)>;
 
-pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
+pub fn verify(dir: PathBuf, config: String) -> Result<QueueVec, Error> {
     let mut body = reqwest::get(&format!("{}/repo.cbor", &config)).unwrap_or_print();
     let repo = crate::files::Repo::open(&mut body)?;
     let mut queue: QueueVec  = VecDeque::new();
@@ -29,7 +29,11 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
     }
     println!("Queue: {}", queue.len());
     crate::server::send(format!("Q {}", queue.len()));
-    let aqueue = Arc::new(Mutex::new(queue));
+    Ok(queue)
+}
+
+pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
+    let aqueue = Arc::new(Mutex::new(verify(dir, config.clone())?));
     let mut workers = Vec::new();
     let m = MultiProgress::new();
     for _ in 0..4 {
