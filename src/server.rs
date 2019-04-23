@@ -1,3 +1,5 @@
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
 use ws::{connect, listen, CloseCode, Handler, Message, Result, Sender, Handshake};
 
 use std::path::PathBuf;
@@ -15,6 +17,7 @@ pub enum Stage {
 
 #[derive(Clone)]
 pub struct Server {
+    pub id: String,
     pub out: Sender,
     pub stage: Stage,
     pub dir: Option<PathBuf>,
@@ -43,6 +46,7 @@ impl Handler for Server {
                         _ => {
                             self.stage = Stage::URL;
                             self.dir = Some(PathBuf::from(&text));
+                            println!("[{}] Directory: {}", self.id, &text);
                             self.out.send("url").unwrap();
                         }
                     }
@@ -56,6 +60,7 @@ impl Handler for Server {
                                 println!("url: {}", text);
                                 self.stage = Stage::CMD;
                                 self.url = Some(text.clone());
+                                println!("[{}] URL: {}", self.id, &text);
                                 self.out.send("cmd").unwrap();
                             }
                         }
@@ -88,7 +93,14 @@ impl Handler for Server {
     }
 
 pub fn run() {
-    listen("127.0.0.1:51462", |out| Server {out, stage: Stage::ROOT, dir: None, url: None}).unwrap();
+    listen("127.0.0.1:51462", |out| {
+        let id: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(6)
+            .collect();
+        println!("[{}] New Connection", id);
+        Server {out, stage: Stage::ROOT, id: id, dir: None, url: None}
+    }).unwrap();
 }
 
 // real hacky, a better solution would be nice
