@@ -18,7 +18,7 @@ pub fn extract<R: Seek + Read>(input: R) -> Result<Vec<String>, Error> {
         let mut file = archive.by_index(i).unwrap_or_print();
         let outpath = file.sanitized_name();
         if (&*file.name()).ends_with('/') {
-            fs::create_dir_all(&outpath)?;
+            fs::create_dir_all(&outpath.as_path().to_str().unwrap().to_owned().to_lowercase())?;
             let path = outpath.as_path().components().next().unwrap().as_os_str().to_str().unwrap().to_owned();
             let is_present = roots.iter().any(|c| c == &path);
             if !is_present {
@@ -37,9 +37,8 @@ pub fn extract<R: Seek + Read>(input: R) -> Result<Vec<String>, Error> {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-
             if let Some(mode) = file.unix_mode() {
-                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode))?;
+                fs::set_permissions(&outpath.as_path().to_str().unwrap().to_owned().to_lowercase(), fs::Permissions::from_mode(mode))?;
             }
         }
     }
