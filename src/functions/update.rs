@@ -13,7 +13,7 @@ const REPO: &'static str = "https://raw.githubusercontent.com/Dynulo/GluonReposi
 
 pub fn process(p: &mut Packages) -> Result<u32, Error> {
 
-    let total = 0;
+    let mut total = 0;
 
     let old = p.packages.clone();
 
@@ -39,6 +39,7 @@ pub fn process(p: &mut Packages) -> Result<u32, Error> {
             let mut cursor = Cursor::new(buf);
             crate::download::download(&releases[0].assets[0].url, &mut cursor, Some(releases[0].assets[0].size), None).unwrap_or_print();
             let folders = crate::files::extract(cursor)?;
+            total += 1;
             if p.packages.contains_key(&package) {
                 p.packages.remove(&package);
             }

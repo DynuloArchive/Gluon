@@ -6,8 +6,8 @@ use zip;
 
 pub use crate::files::repo::*;
 
-use std::io::{Error, Read, Seek};
 use std::fs;
+use std::io::{Error, Read, Seek};
 
 use crate::error::*;
 
@@ -27,10 +27,10 @@ pub fn extract<R: Seek + Read>(input: R) -> Result<Vec<String>, Error> {
         } else {
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    fs::create_dir_all(&p)?;
+                    fs::create_dir_all(p.to_str().unwrap().to_owned().to_lowercase())?;
                 }
             }
-            let mut outfile = fs::File::create(&outpath)?;
+            let mut outfile = fs::File::create(&outpath.as_path().to_str().unwrap().to_owned().to_lowercase())?;
             std::io::copy(&mut file, &mut outfile)?;
         }
         // Get and Set permissions
