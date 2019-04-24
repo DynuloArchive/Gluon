@@ -21,6 +21,7 @@ pub fn open(path: &PathBuf) -> Result<Config, Error> {
 pub struct Config {
     pub name: String,
     pub mods: HashMap<String, Mod>,
+    #[serde(default = "HashMap::new")]
     pub servers: HashMap<String, Server>,
 }
 impl Config {

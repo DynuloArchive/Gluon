@@ -25,6 +25,7 @@ Usage:
     gluon run [--jobs=<n>]
     gluon fetch <dir> <config>
     gluon add <package>
+    gluon update
     gluon server
 ";
 
@@ -33,6 +34,7 @@ struct Args {
     cmd_run: bool,
     cmd_fetch: bool,
     cmd_add: bool,
+    cmd_update: bool,
     cmd_server: bool,
     arg_dir: String,
     arg_config: String,
@@ -50,6 +52,11 @@ fn run(args: &Args) -> Result<(), Error> {
         let installed = crate::functions::repo::add(&mut p, &args.arg_package, 0)?;
         p.save()?;
         println!("Installed {} Packages", installed);
+    } else if args.cmd_update {
+        let mut p: Packages = Packages::open()?;
+        let installed = crate::functions::update::process(&mut p)?;
+        p.save()?;
+        println!("Updated {} Packages", installed);
     } else if args.cmd_server {
         println!("Starting Gluon Server");
         crate::server::run();
