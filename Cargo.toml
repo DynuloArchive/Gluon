@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 armake2 = { git = "https://github.com/dynulo/armake2", branch = "master" }
-colored = "1.7"
+colored = "1.8"
 data-encoding = "*"
 docopt = "1"
 http = "*"
