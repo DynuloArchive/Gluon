@@ -33,9 +33,12 @@ pub fn process_dir(dir: &String, layer: &Arc<Mutex<&mut Layer>>) -> Result<(), E
         .collect();
     files.par_iter().for_each(|entry| {
         if entry.is_file() {
+            let meta = std::fs::metadata(entry).unwrap_or_print();
             let mut file = ModFile::new(
                 entry.file_name().unwrap().to_str().unwrap().to_owned(),
-                crate::hash::hash_file(entry).unwrap_or_print()
+                crate::hash::hash_file(entry).unwrap_or_print(),
+                meta.len(),
+                meta.modified().ok()
             );
             if entry.as_path().extension().unwrap_or(OsStr::new("")) == "pbo" {
                 let pbofile = pbo::PBO::read(&mut File::open(entry).unwrap_or_print()).unwrap_or_print();

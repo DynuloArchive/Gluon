@@ -9,6 +9,7 @@ armake2 = { git = "https://github.com/dynulo/armake2", branch = "master" }
 colored = "1.7"
 data-encoding = "*"
 docopt = "1"
+filetime = "0.2"
 http = "*"
 indicatif = "0.11.0"
 linked-hash-map = "*"

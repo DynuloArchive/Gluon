@@ -34,10 +34,12 @@ impl Handler for Server {
                     match text.as_str() {
                         "dir" => {
                             self.stage = Stage::DIR;
-                            self.out.send("dir").unwrap();
+                            self.out.send("dir").unwrap();    
+                            println!("[{}] New Connection", self.id);
                         }
                         _ => {
-                            self.out.broadcast(text).unwrap();
+                            self.out.broadcast(text);
+                            self.out.close(CloseCode::Normal);
                         }
                     }
                 },
@@ -98,7 +100,6 @@ pub fn run() {
             .sample_iter(&Alphanumeric)
             .take(6)
             .collect();
-        println!("[{}] New Connection", id);
         Server {out, stage: Stage::ROOT, id: id, dir: None, url: None}
     }).unwrap();
 }

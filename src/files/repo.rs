@@ -3,6 +3,7 @@ use serde_json;
 
 use std::fs::File;
 use std::io::{Error, Read, Write};
+use std::time::SystemTime;
 
 use crate::error::*;
 
@@ -60,13 +61,18 @@ pub struct ModFile {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub p: Vec<ModPart>,
+    pub s: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub m: Option<SystemTime>,
 }
 impl ModFile {
-    pub fn new(name: String, hash: String) -> Self {
+    pub fn new(name: String, hash: String, size: u64, modtime: Option<SystemTime>) -> Self {
         ModFile {
             n: name,
             h: hash,
             p: Vec::new(),
+            s: size,
+            m: modtime,
         }
     }
 }
