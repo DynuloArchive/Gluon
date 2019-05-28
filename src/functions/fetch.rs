@@ -1,5 +1,6 @@
 use armake2::io::*;
 use armake2::pbo::{PBO, PBOHeader};
+use filetime;
 use indicatif::{MultiProgress, ProgressBar};
 use linked_hash_map::{LinkedHashMap};
 use reqwest;
@@ -62,6 +63,9 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
                 } else {
                     let mut out = File::create(&pbuf).unwrap_or_print();
                     pb = crate::download::download(&url, &mut out, None, Some(pb)).unwrap_or_print();
+                }
+                if let Some(mtime) = file.m {
+                    filetime::set_file_mtime(&pbuf, filetime::FileTime::from_system_time(mtime));
                 }
                 crate::server::send(format!("E {:?}", &pbuf));
             } else {go = false}}

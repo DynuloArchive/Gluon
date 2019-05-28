@@ -61,7 +61,7 @@ pub struct ModFile {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default = "Vec::new")]
     pub p: Vec<ModPart>,
-    pub s: u64,
+    pub l: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub m: Option<SystemTime>,
 }
@@ -71,7 +71,7 @@ impl ModFile {
             n: name,
             h: hash,
             p: Vec::new(),
-            s: size,
+            l: size,
             m: modtime,
         }
     }

@@ -19,7 +19,7 @@ use crate::error::*;
 use crate::files::packages::*;
 
 const USAGE: &'static str = "
-Gluon, an easy to use PBO management tool
+Gluon, an easy to use mod distribution tool
 
 Usage:
     gluon run [--jobs=<n>]
