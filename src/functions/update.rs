@@ -9,7 +9,7 @@ use std::io::{Cursor, Error};
 use crate::error::*;
 use crate::files::packages::*;
 
-const REPO: &'static str = "https://raw.githubusercontent.com/Dynulo/GluonRepository/master/";
+const REPO: &str = "https://raw.githubusercontent.com/Dynulo/GluonRepository/master/";
 
 pub fn process(p: &mut Packages) -> Result<u32, Error> {
 
@@ -46,7 +46,7 @@ pub fn process(p: &mut Packages) -> Result<u32, Error> {
             p.packages.insert(package.clone(), LocalPackage {
                 github: remote.github,
                 version: releases[0].tag_name.clone(),
-                folders: folders,
+                folders,
                 etag: response.headers().get("ETAG").unwrap_or(&HeaderValue::from_str("").unwrap()).to_str().unwrap().to_owned(),
             });
         }

@@ -9,9 +9,9 @@ use std::io::{Cursor, Error};
 use crate::error::*;
 use crate::files::packages::*;
 
-const REPO: &'static str = "https://raw.githubusercontent.com/Dynulo/GluonRepository/master/";
+const REPO: &str = "https://raw.githubusercontent.com/Dynulo/GluonRepository/master/";
 
-pub fn add(p: &mut Packages, package: &String, total: u32) -> Result<u32, Error> {
+pub fn add(p: &mut Packages, package: &str, total: u32) -> Result<u32, Error> {
     let url = format!("{}{}/{}.json", REPO, &package[0..2], package);
     let mut response = reqwest::get(&url).unwrap_or_print();
     let remote: RemotePackage = serde_json::from_reader(&mut response)?;
@@ -30,7 +30,7 @@ pub fn add(p: &mut Packages, package: &String, total: u32) -> Result<u32, Error>
             let mut old = p.packages[package].clone();
             old.etag = response.headers().get("ETAG").unwrap_or(&HeaderValue::from_str("").unwrap()).to_str().unwrap().to_owned();
             p.packages.remove(package);
-            p.packages.insert(package.clone(), old);
+            p.packages.insert(package.to_owned(), old);
             if p.packages[package].version == releases[0].tag_name {
                 return Ok(total);
             }
@@ -43,10 +43,10 @@ pub fn add(p: &mut Packages, package: &String, total: u32) -> Result<u32, Error>
         if p.packages.contains_key(package) {
             p.packages.remove(package);
         }
-        p.packages.insert(package.clone(), LocalPackage {
+        p.packages.insert(package.to_owned(), LocalPackage {
             github: remote.github,
             version: releases[0].tag_name.clone(),
-            folders: folders,
+            folders,
             etag: response.headers().get("ETAG").unwrap_or(&HeaderValue::from_str("").unwrap()).to_str().unwrap().to_owned(),
         });
     } else {

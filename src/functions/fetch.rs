@@ -54,7 +54,7 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
                 let url = format!("{}/{}/{}", &config, &urlpath, &file.n);
                 pb.set_message(&file.n);
                 if pbuf.exists() {
-                    if pbuf.extension().unwrap_or(OsStr::new("")) == "pbo" {
+                    if pbuf.extension().unwrap_or_else(|| OsStr::new("")) == "pbo" {
                         pbo(&pbuf, &file, url).unwrap_or_print();
                     } else {
                         let mut out = File::create(&pbuf).unwrap_or_print();
@@ -75,11 +75,11 @@ pub fn process(dir: PathBuf, config: String) -> Result<(), Error> {
     for worker in workers {
         worker.join().unwrap();
     }
-    crate::server::send(format!("Done"));
+    crate::server::send("Done".to_string());
     Ok(())
 }
 
-pub fn process_layer(dir: &PathBuf, root: &String, lpath: &String, layer: &Layer, queue: &mut QueueVec) -> Result<(), Error> {
+pub fn process_layer(dir: &PathBuf, root: &str, lpath: &str, layer: &Layer, queue: &mut QueueVec) -> Result<(), Error> {
     let path = format!("{}/{}", &lpath, &layer.n);
     println!("layer: {}", path);
     if PathBuf::from(format!("{}/{}", dir.display(), &path)).exists() {
@@ -90,10 +90,8 @@ pub fn process_layer(dir: &PathBuf, root: &String, lpath: &String, layer: &Layer
                 if !layer.l.iter().any(|x| x.n == name) {
                     fs::remove_dir_all(format!("{}/{}/{}", dir.display(), &path, name))?;
                 }
-            } else {
-                if !layer.f.iter().any(|x| x.n == name) {
-                    fs::remove_file(format!("{}/{}/{}", dir.display(), &path, name))?;
-                }
+            } else if !layer.f.iter().any(|x| x.n == name) {
+                fs::remove_file(format!("{}/{}/{}", dir.display(), &path, name))?;
             }
         }
     }
@@ -129,11 +127,11 @@ fn pbo(pbuf: &PathBuf, file: &ModFile, url: String) -> Result<(), Error> {
     let mut header_extensions: HashMap<String, String> = HashMap::new();
     loop {
         let header = PBOHeader::read(&mut response)?;
-        if header.packing_method == 0x56657273 {
+        if header.packing_method == 0x5665_7273 {
             if !first { unreachable!(); }
             loop {
                 let s = response.read_cstring()?;
-                if s.len() == 0 { break; }
+                if s.is_empty() { break; }
                 header_extensions.insert(s, response.read_cstring()?);
             }
         } else if header.filename == "" {
@@ -156,26 +154,24 @@ fn pbo(pbuf: &PathBuf, file: &ModFile, url: String) -> Result<(), Error> {
             let mut buffer: Box<[u8]> = vec![0; newfile.l as usize].into_boxed_slice();
             response.read_exact(&mut buffer)?;
             files.insert(header.filename.clone(), Cursor::new(buffer));
+        } else if crate::hash::hash_cursor(pbofile.files.get(&header.filename).unwrap().clone())? != newfile.h {
+            println!("hash part mismatch: {}", header.filename);
+            let client = reqwest::Client::new();
+            let mut response = client.get(&url)
+                .header(RANGE,
+                    HeaderValue::from_str(&format!("bytes={}-{}", newfile.s, newfile.s + newfile.l)).unwrap_or_print()
+                ).send().unwrap_or_print();
+            let mut buffer: Box<[u8]> = vec![0; newfile.l as usize].into_boxed_slice();
+            response.read_exact(&mut buffer)?;
+            files.insert(header.filename.clone(), Cursor::new(buffer));
         } else {
-            if crate::hash::hash_cursor(pbofile.files.get(&header.filename).unwrap().clone())? != newfile.h {
-                println!("hash part mismatch: {}", header.filename);
-                let client = reqwest::Client::new();
-                let mut response = client.get(&url)
-                    .header(RANGE,
-                        HeaderValue::from_str(&format!("bytes={}-{}", newfile.s, newfile.s + newfile.l)).unwrap_or_print()
-                    ).send().unwrap_or_print();
-                let mut buffer: Box<[u8]> = vec![0; newfile.l as usize].into_boxed_slice();
-                response.read_exact(&mut buffer)?;
-                files.insert(header.filename.clone(), Cursor::new(buffer));
-            } else {
-                files.insert(header.filename.clone(), pbofile.files.get(&header.filename).unwrap().clone());
-            }
+            files.insert(header.filename.clone(), pbofile.files.get(&header.filename).unwrap().clone());
         }
     }
     let newpbo = PBO {
-        files: files,
-        header_extensions: header_extensions,
-        headers: headers,
+        files,
+        header_extensions,
+        headers,
         checksum: None,
     };
     let mut outfile = File::create(&pbuf)?;

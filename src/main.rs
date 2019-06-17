@@ -18,7 +18,7 @@ mod server;
 use crate::error::*;
 use crate::files::packages::*;
 
-const USAGE: &'static str = "
+const USAGE: &str = "
 Gluon, an easy to use mod distribution tool
 
 Usage:

@@ -100,7 +100,7 @@ pub fn run() {
             .sample_iter(&Alphanumeric)
             .take(6)
             .collect();
-        Server {out, stage: Stage::ROOT, id: id, dir: None, url: None}
+        Server {out, stage: Stage::ROOT, id, dir: None, url: None}
     }).unwrap();
 }
 

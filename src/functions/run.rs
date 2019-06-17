@@ -27,7 +27,7 @@ pub fn process() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn process_dir(dir: &String, layer: &Arc<Mutex<&mut Layer>>) -> Result<(), Error> {
+pub fn process_dir(dir: &str, layer: &Arc<Mutex<&mut Layer>>) -> Result<(), Error> {
     let files: Vec<PathBuf> = fs::read_dir(dir).unwrap()
         .map(|file| file.unwrap().path())
         .collect();
@@ -40,7 +40,7 @@ pub fn process_dir(dir: &String, layer: &Arc<Mutex<&mut Layer>>) -> Result<(), E
                 meta.len(),
                 meta.modified().ok()
             );
-            if entry.as_path().extension().unwrap_or(OsStr::new("")) == "pbo" {
+            if entry.as_path().extension().unwrap_or_else(|| OsStr::new("")) == "pbo" {
                 let pbofile = pbo::PBO::read(&mut File::open(entry).unwrap_or_print()).unwrap_or_print();
                 // add 2, null start byte, null end byte
                 // add 21, empty PBO header
@@ -59,7 +59,7 @@ pub fn process_dir(dir: &String, layer: &Arc<Mutex<&mut Layer>>) -> Result<(), E
                 for filepart in &pbofile.files {
                     let hash = crate::hash::hash_cursor(filepart.1.clone()).unwrap_or_print();
                     let length = filepart.1.get_ref().clone().len();
-                    let part = ModPart::new(filepart.0.to_string(), hash, length.clone(), filestart);
+                    let part = ModPart::new(filepart.0.to_string(), hash, length, filestart);
                     filestart += length;
                     file.p.push(part);
                 }
